@@ -1,14 +1,19 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Header, HeaderRow, HeaderCell } from '@table-library/react-table-library/table';
-import { tableHeader } from './tokens';
+import { tableHeader, tableRow } from './tokens';
 import { useTableContext } from './TableContext';
 import { ComponentIds } from './componentIds';
-import type { TableHeaderRowProps, TableHeaderCellProps, TableBackgroundColors } from './types';
+import type {
+  TableHeaderRowProps,
+  TableHeaderCellProps,
+  TableBackgroundColors,
+  TableProps,
+} from './types';
 import type { CheckboxProps } from '~components/Checkbox';
 import { Checkbox } from '~components/Checkbox';
 import { Text } from '~components/Typography';
-import { castWebType, makeMotionTime, makeSpace } from '~utils';
+import { castWebType, makeMotionTime, makeSize, makeSpace } from '~utils';
 import { makeAccessible } from '~utils/makeAccessible';
 import { assignWithoutSideEffects } from '~utils/assignWithoutSideEffects';
 import BaseBox from '~components/Box/BaseBox';
@@ -16,6 +21,8 @@ import { MetaConstants, metaAttribute } from '~utils/metaAttribute';
 import { useTheme } from '~components/BladeProvider';
 import getIn from '~utils/lodashButBetter/get';
 import { getFocusRingStyles } from '~utils/getFocusRingStyles';
+import { size } from '~tokens/global';
+import { makeAnalyticsAttribute } from '~utils/makeAnalyticsAttribute';
 
 const SortButton = styled.button(({ theme }) => ({
   cursor: 'pointer',
@@ -46,7 +53,10 @@ const SortIcon = ({
   const upArrowColor = isSorted && isSortReversed ? activeColor : defaultColor;
   const downArrowColor = isSorted && !isSortReversed ? activeColor : defaultColor;
   return (
-    <SortButton {...makeAccessible({ label: 'Toggle Sort', role: 'button' })}>
+    <SortButton
+      {...metaAttribute({ name: MetaConstants.TableSortButton })}
+      {...makeAccessible({ label: 'Toggle Sort', role: 'button' })}
+    >
       <svg width={20} height={20} fill="none">
         <path
           fill={upArrowColor}
@@ -69,9 +79,14 @@ const StyledHeader = styled(Header)({
   },
 });
 
-const _TableHeader = ({ children }: TableHeaderRowProps): React.ReactElement => {
+const _TableHeader = ({ children, ...rest }: TableHeaderRowProps): React.ReactElement => {
   return (
-    <StyledHeader {...metaAttribute({ name: MetaConstants.TableHeader })}>{children}</StyledHeader>
+    <StyledHeader
+      {...metaAttribute({ name: MetaConstants.TableHeader })}
+      {...makeAnalyticsAttribute(rest)}
+    >
+      {children}
+    </StyledHeader>
   );
 };
 
@@ -82,8 +97,13 @@ const TableHeader = assignWithoutSideEffects(_TableHeader, {
 const StyledHeaderCell = styled(HeaderCell)<{
   $isSortable: boolean;
   $backgroundColor: TableBackgroundColors;
-}>(({ theme, $isSortable, $backgroundColor }) => ({
+  $rowDensity: NonNullable<TableProps<unknown>['rowDensity']>;
+  $hasPadding: boolean;
+  $textAlign: 'left' | 'center' | 'right';
+}>(({ theme, $isSortable, $backgroundColor, $rowDensity, $hasPadding, $textAlign }) => ({
   '&&&': {
+    display: $textAlign ? 'flex' : 'block',
+    justifyContent: $textAlign ? 'space-between' : 'initial',
     height: '100%',
     backgroundColor: getIn(theme.colors, $backgroundColor),
     borderBottomWidth: makeSpace(getIn(theme.border.width, tableHeader.borderBottomAndTopWidth)),
@@ -97,20 +117,35 @@ const StyledHeaderCell = styled(HeaderCell)<{
       backgroundColor: getIn(theme.colors, tableHeader.backgroundColor),
       display: 'flex',
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      justifyContent: $textAlign ? $textAlign : 'space-between',
       alignItems: 'center',
       height: '100%',
-      paddingTop: makeSpace(getIn(theme, tableHeader.paddingTop)),
-      paddingBottom: makeSpace(getIn(theme, tableHeader.paddingBottom)),
-      paddingLeft: makeSpace(getIn(theme, tableHeader.paddingLeft)),
-      paddingRight: makeSpace(getIn(theme, tableHeader.paddingRight)),
+      paddingLeft: $hasPadding
+        ? makeSpace(getIn(theme, tableRow.paddingLeft[$rowDensity]))
+        : undefined,
+      paddingRight: $hasPadding
+        ? makeSpace(getIn(theme, tableRow.paddingRight[$rowDensity]))
+        : undefined,
+      minHeight: makeSize(getIn(size, tableRow.minHeight[$rowDensity])),
     },
     '&:focus-visible': getFocusRingStyles({ theme, negativeOffset: true }),
   },
 }));
 
-const _TableHeaderCell = ({ children, headerKey }: TableHeaderCellProps): React.ReactElement => {
-  const { toggleSort, currentSortedState, backgroundColor } = useTableContext();
+const _TableHeaderCell = ({
+  children,
+  headerKey,
+  _hasPadding = true,
+  textAlign,
+  ...rest
+}: TableHeaderCellProps): React.ReactElement => {
+  const {
+    toggleSort,
+    currentSortedState,
+    backgroundColor,
+    rowDensity,
+    headerRowDensity,
+  } = useTableContext();
   const isChildrenString = typeof children === 'string';
   const isSortable =
     headerKey && Boolean(currentSortedState.sortableColumns?.find((key) => key === headerKey));
@@ -119,22 +154,28 @@ const _TableHeaderCell = ({ children, headerKey }: TableHeaderCellProps): React.
       tabIndex={0}
       $isSortable={isSortable}
       $backgroundColor={backgroundColor}
+      $rowDensity={headerRowDensity ?? rowDensity}
+      $hasPadding={_hasPadding}
+      $textAlign={textAlign}
       onClick={() => {
         if (isSortable) {
           toggleSort(headerKey);
         }
       }}
       {...metaAttribute({ name: MetaConstants.TableHeaderCell })}
+      {...makeAnalyticsAttribute(rest)}
     >
-      {isChildrenString ? (
-        <Text size="medium" weight="medium" color="surface.text.gray.normal">
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
+      <BaseBox display="flex" flexGrow={1} justifyContent={textAlign}>
+        {isChildrenString ? (
+          <Text size="medium" weight="medium" color="surface.text.gray.normal">
+            {children}
+          </Text>
+        ) : (
+          children
+        )}
+      </BaseBox>
       {isSortable && (
-        <BaseBox paddingLeft="spacing.2" backgroundColor="transparent">
+        <BaseBox paddingLeft="spacing.2" backgroundColor="transparent" flexShrink={0}>
           <SortIcon
             isSorted={currentSortedState.sortKey === headerKey}
             isSortReversed={currentSortedState.isSortReversed}
@@ -151,38 +192,84 @@ const TableHeaderCell = assignWithoutSideEffects(_TableHeaderCell, {
 
 const TableHeaderCellCheckbox = ({
   isChecked,
+  isDisabled,
   isIndeterminate,
   onChange,
 }: {
   isChecked: CheckboxProps['isChecked'];
+  isDisabled: CheckboxProps['isDisabled'];
   isIndeterminate?: CheckboxProps['isIndeterminate'];
   onChange: CheckboxProps['onChange'];
 }): React.ReactElement => {
   return (
     <TableHeaderCell headerKey="SELECT">
       <BaseBox display="flex" alignItems="center" justifyContent="center" flex={1}>
-        <Checkbox isChecked={isChecked} isIndeterminate={isIndeterminate} onChange={onChange} />
+        <Checkbox
+          isChecked={isChecked}
+          isDisabled={isDisabled}
+          isIndeterminate={isIndeterminate}
+          onChange={onChange}
+        />
       </BaseBox>
     </TableHeaderCell>
   );
 };
 
-const _TableHeaderRow = ({ children }: TableHeaderRowProps): React.ReactElement => {
-  const { selectionType, selectedRows, totalItems, toggleAllRowsSelection } = useTableContext();
+const StyledHeaderRow = styled(HeaderRow)<{ $showBorderedCells: boolean }>(
+  ({ theme, $showBorderedCells }) => ({
+    '& th': $showBorderedCells
+      ? {
+          borderRightWidth: makeSpace(getIn(theme.border.width, tableRow.borderBottomWidth)),
+          borderRightColor: getIn(theme.colors, tableRow.borderColor),
+          borderRightStyle: 'solid',
+        }
+      : undefined,
+    '& th:last-child ': {
+      borderRight: 'none',
+    },
+  }),
+);
+
+const _TableHeaderRow = ({
+  children,
+  rowDensity,
+  ...rest
+}: TableHeaderRowProps): React.ReactElement => {
+  const {
+    disabledRows,
+    selectionType,
+    selectedRows,
+    totalItems,
+    toggleAllRowsSelection,
+    setHeaderRowDensity,
+    showBorderedCells,
+    hasHoverActions,
+  } = useTableContext();
   const isMultiSelect = selectionType === 'multiple';
   const isAllSelected = selectedRows && selectedRows.length === totalItems;
   const isIndeterminate = selectedRows && selectedRows.length > 0 && !isAllSelected;
+  const isDisabled = disabledRows && disabledRows.length === totalItems;
+  if (rowDensity) {
+    setHeaderRowDensity(rowDensity);
+  }
   return (
-    <HeaderRow role="rowheader" {...metaAttribute({ name: MetaConstants.TableHeaderRow })}>
+    <StyledHeaderRow
+      role="rowheader"
+      {...metaAttribute({ name: MetaConstants.TableHeaderRow })}
+      {...makeAnalyticsAttribute(rest)}
+      $showBorderedCells={showBorderedCells}
+    >
       {isMultiSelect && (
         <TableHeaderCellCheckbox
           isChecked={isAllSelected}
+          isDisabled={isDisabled}
           isIndeterminate={isIndeterminate}
           onChange={() => toggleAllRowsSelection()}
         />
       )}
       {children}
-    </HeaderRow>
+      {hasHoverActions ? <TableHeaderCell _hasPadding={false}>Actions</TableHeaderCell> : null}
+    </StyledHeaderRow>
   );
 };
 

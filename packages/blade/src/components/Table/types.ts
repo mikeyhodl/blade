@@ -1,7 +1,11 @@
+import type React from 'react';
 import type { Theme } from '~components/BladeProvider';
 import type { BoxProps } from '~components/Box';
 import type { StyledPropsBlade } from '~components/Box/styledProps';
+import type { DropdownProps } from '~components/Dropdown';
+import type { BaseInputProps } from '~components/Input/BaseInput';
 import type { DotNotationToken } from '~utils/lodashButBetter/get';
+import type { DataAnalyticsAttribute, TestID } from '~utils/types';
 
 type TableNode<Item> = Item & {
   id: Identifier;
@@ -39,7 +43,13 @@ type TableHeaderRowProps = {
    * </TableHeader>
    **/
   children: React.ReactNode;
-};
+  /**
+   * The rowDensity prop determines the density of the table.
+   * The rowDensity prop can be 'compact', 'normal', or'comfortable'.
+   * The default value is `normal`.
+   **/
+  rowDensity?: TableProps<unknown>['rowDensity'];
+} & DataAnalyticsAttribute;
 
 type TableHeaderCellProps = {
   /**
@@ -52,7 +62,15 @@ type TableHeaderCellProps = {
    * Sorting is enabled only for columns whose key is present in sortableColumns prop of Table.
    **/
   headerKey?: string;
-};
+  /**
+   * The textAlign prop determines the content alignment of the table.
+   * The textAlign prop can be 'left', 'center', or 'right'.
+   * The default value is `left`.
+   **/
+  textAlign?: 'left' | 'center' | 'right';
+
+  _hasPadding?: boolean;
+} & DataAnalyticsAttribute;
 
 type TableProps<Item> = {
   /**
@@ -67,6 +85,11 @@ type TableProps<Item> = {
    */
   data: TableData<Item>;
   /**
+   * Selection mode determines how the table rows can be selected.
+   * @default 'row'
+   **/
+  multiSelectTrigger?: 'checkbox' | 'row';
+  /**
    * The selectionType prop determines the type of selection that is allowed on the table.
    * The selectionType prop can be 'none', 'single' or 'multiple'.
    * @default 'none'
@@ -76,7 +99,25 @@ type TableProps<Item> = {
    * The onSelectionChange prop is a function that is called when the selection changes.
    * The function is called with an object that has a values property that is an array of the selected rows.
    **/
-  onSelectionChange?: ({ values }: { values: TableNode<Item>[] }) => void;
+  onSelectionChange?: ({
+    values,
+    selectedIds,
+  }: {
+    /**
+     * Note: on server side paginated data, this prop will only contain the selected rows on the current page.
+     *
+     * Thus, it's recommended to use `selectedIds` for more consistent state management across server/client paginated data.
+     *
+     * *Deprecated:* Use `selectedIds` instead.
+     *
+     * @deprecated
+     */
+    values: TableNode<Item>[];
+    /**
+     * An array of selected row ids.
+     */
+    selectedIds: Identifier[];
+  }) => void;
   /**
    * The isHeaderSticky prop determines whether the table header is sticky or not.
    * The default value is `false`.
@@ -94,10 +135,10 @@ type TableProps<Item> = {
   isFirstColumnSticky?: boolean;
   /**
    * The rowDensity prop determines the density of the table.
-   * The rowDensity prop can be 'normal' or 'comfortable'.
+   * The rowDensity prop can be 'compact', 'normal', or'comfortable'.
    * The default value is `normal`.
    **/
-  rowDensity?: 'normal' | 'comfortable';
+  rowDensity?: 'compact' | 'normal' | 'comfortable';
   /**
    * The onSortChange prop is a function that is called when the sort changes.
    * The function is called with an object that has a sortKey property that is the key of the column that is sorted and a isSortReversed property that is a boolean that determines whether the sort is reversed or not.
@@ -150,7 +191,16 @@ type TableProps<Item> = {
    * The default value is `false`.
    **/
   isRefreshing?: boolean;
-} & StyledPropsBlade;
+  /**
+   * The showBorderedCells prop determines whether the table should have bordered cells or not.
+   **/
+  showBorderedCells?: boolean;
+  /**
+   * An array of default selected row ids. This will be used to set the initial selected rows.
+   */
+  defaultSelectedIds?: Identifier[];
+} & DataAnalyticsAttribute &
+  StyledPropsBlade;
 
 type Identifier = string | number;
 
@@ -165,7 +215,7 @@ type TableBodyProps = {
    * </TableBody>
    **/
   children: React.ReactNode;
-};
+} & DataAnalyticsAttribute;
 
 type TableRowProps<Item> = {
   /**
@@ -202,7 +252,10 @@ type TableRowProps<Item> = {
    * Callback triggered when the row is clicked. It is called with the current row item prop.
    */
   onClick?: ({ item }: { item: TableNode<Item> }) => void;
-};
+
+  hoverActions?: React.ReactElement;
+} & TestID &
+  DataAnalyticsAttribute;
 
 type TableCellProps = {
   /**
@@ -217,7 +270,54 @@ type TableCellProps = {
    * </TableCell>
    **/
   children: React.ReactNode;
+  /**
+   * The textAlign prop determines the content alignment of the table.
+   * The textAlign prop can be 'left', 'center', or 'right'.
+   * The default value is `left`.
+   **/
+  textAlign?: 'left' | 'center' | 'right';
+  /**
+   * Removes padding from CellWrapper
+   *
+   * @private
+   */
+  _hasPadding?: boolean;
+} & DataAnalyticsAttribute;
+
+type TableEditableCellProps = Pick<
+  BaseInputProps,
+  | 'validationState'
+  | 'placeholder'
+  | 'defaultValue'
+  | 'name'
+  | 'onChange'
+  | 'onFocus'
+  | 'onBlur'
+  | 'value'
+  | 'isDisabled'
+  | 'isRequired'
+  | 'prefix'
+  | 'suffix'
+  | 'maxCharacters'
+  | 'autoFocus'
+  | 'keyboardReturnKeyType'
+  | 'autoCompleteSuggestionType'
+  | 'onSubmit'
+  | 'autoCapitalize'
+  | 'testID'
+  | 'onClick'
+  | 'leadingIcon'
+  | 'trailingButton'
+  | 'errorText'
+  | 'successText'
+> & {
+  accessibilityLabel: NonNullable<BaseInputProps['accessibilityLabel']>;
 };
+
+type TableEditableDropdownCellProps = Pick<
+  DropdownProps,
+  'children' | 'isOpen' | 'onOpenChange' | 'selectionType' | 'zIndex'
+>;
 
 type TableFooterProps = {
   /**
@@ -230,7 +330,7 @@ type TableFooterProps = {
    * </TableFooter>
    **/
   children: React.ReactNode;
-};
+} & DataAnalyticsAttribute;
 
 type TableFooterRowProps = {
   /**
@@ -243,14 +343,20 @@ type TableFooterRowProps = {
    * </TableFooter>
    **/
   children: React.ReactNode;
-};
+} & DataAnalyticsAttribute;
 
 type TableFooterCellProps = {
   /**
    * The children of TableHeaderCell can be a string or a ReactNode.
    **/
   children: string | React.ReactNode;
-};
+  /**
+   * The textAlign prop determines the content alignment of the table.
+   * The textAlign prop can be 'left', 'center', or 'right'.
+   * The default value is `left`.
+   **/
+  textAlign?: 'left' | 'center' | 'right';
+} & DataAnalyticsAttribute;
 
 type TablePaginationCommonProps = {
   /**
@@ -290,7 +396,7 @@ type TablePaginationCommonProps = {
    * @default false
    */
   showLabel?: boolean;
-};
+} & DataAnalyticsAttribute;
 
 type TablePaginationType = 'client' | 'server';
 
@@ -350,11 +456,12 @@ type TableToolbarProps = {
    * @default `${selectedRows.length} 'Items'} Selected`
    */
   selectedTitle?: string;
-};
+} & DataAnalyticsAttribute;
 
 type TableToolbarActionsProps = {
   children?: React.ReactNode;
-} & StyledPropsBlade;
+} & StyledPropsBlade &
+  DataAnalyticsAttribute;
 
 export type {
   TableProps,
@@ -367,6 +474,8 @@ export type {
   TableBodyProps,
   TableRowProps,
   TableCellProps,
+  TableEditableCellProps,
+  TableEditableDropdownCellProps,
   TableFooterProps,
   TableFooterRowProps,
   TableFooterCellProps,
