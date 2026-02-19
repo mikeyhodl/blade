@@ -1,5 +1,11 @@
 # @razorpay/blade
 
+## 12.82.0
+
+### Minor Changes
+
+- 7952254f: Add agentic loaded in ChatMessage
+
 ## 12.81.3
 
 ### Patch Changes
