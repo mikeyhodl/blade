@@ -1,5 +1,11 @@
 # @razorpay/blade-mcp
 
+## 1.23.3
+
+### Patch Changes
+
+- 2eddc691: chore: add changeset
+
 ## 1.23.2
 
 ### Patch Changes
