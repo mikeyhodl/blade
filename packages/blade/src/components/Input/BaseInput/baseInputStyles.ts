@@ -4,6 +4,7 @@ import { getBaseInputBorderStyles } from './getBaseInputBorderStyles';
 import {
   baseInputBackgroundColor,
   baseInputBorderColor,
+  baseInputBorderRadius,
   baseInputBorderWidth,
   baseInputBorderlessBackgroundColor,
   baseInputCounterInputPaddingTokens,
@@ -78,6 +79,7 @@ export const getInputBackgroundAndBorderStyles = ({
   isTextArea,
   isDropdownTrigger,
   isTableInputCell,
+  size = 'medium',
 }: Pick<
   GetInputStyles,
   | 'theme'
@@ -88,6 +90,7 @@ export const getInputBackgroundAndBorderStyles = ({
   | 'isTextArea'
   | 'isDropdownTrigger'
   | 'isTableInputCell'
+  | 'size'
 >): CSSObject => {
   // normal state
   const backgroundColorTokens = isTableInputCell
@@ -119,13 +122,15 @@ export const getInputBackgroundAndBorderStyles = ({
   return {
     backgroundColor,
     borderRadius: makeBorderSize(
-      isTableInputCell ? theme.border.radius.none : theme.border.radius.medium,
+      isTableInputCell
+        ? theme.border.radius.none
+        : theme.border.radius[baseInputBorderRadius[size]],
     ),
     borderStyle: 'solid',
     display: 'flex',
     flexDirection: 'row',
     width: '100%',
-    alignItems: isTextArea ? 'flex-start' : undefined,
+    alignItems: isTextArea ? 'flex-start' : 'center',
     position: 'relative',
     height: isDropdownTrigger && !isTextArea ? 'auto' : undefined,
     border: 'none',
@@ -273,7 +278,7 @@ export const getBaseInputStyles = ({
       ? getHeadingStyles({
           size: size === 'xsmall' ? 'small' : size,
           weight: 'regular',
-          color: isDisabled ? 'surface.text.gray.disabled' : 'surface.text.gray.subtle',
+          color: isDisabled ? 'surface.text.gray.disabled' : 'interactive.text.gray.normal',
           theme,
         })
       : getTextStyles({
@@ -285,7 +290,7 @@ export const getBaseInputStyles = ({
           weight: isInsideCounterInput ? 'semibold' : 'regular',
           color: isDisabled
             ? disabledColor ?? 'surface.text.gray.disabled'
-            : color ?? 'surface.text.gray.subtle',
+            : color ?? 'interactive.text.gray.normal',
           theme,
         })),
 
@@ -319,7 +324,7 @@ export const getBaseInputStyles = ({
     width: '100%',
     height: shouldHaveFlexibleHeight ? undefined : makeSpace(baseInputHeight[size]),
     minHeight: shouldHaveFlexibleHeight ? undefined : makeSpace(baseInputHeight[size]),
-    ...(isReactNative ? {} : { resize: 'none' }),
+    ...(isReactNative ? {} : { resize: 'none', boxSizing: 'border-box' }),
   };
 };
 

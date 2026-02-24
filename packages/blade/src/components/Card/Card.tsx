@@ -18,7 +18,7 @@ import type { BoxProps } from '~components/Box';
 import { makeAccessible } from '~utils/makeAccessible';
 import { useVerifyAllowedChildren } from '~utils/useVerifyAllowedChildren/useVerifyAllowedChildren';
 import type { Platform } from '~utils';
-import { isReactNative } from '~utils';
+import { isReactNative, useTheme } from '~utils';
 import type { Theme } from '~components/BladeProvider';
 import type { DotNotationToken } from '~utils/lodashButBetter/get';
 import { makeAnalyticsAttribute } from '~utils/makeAnalyticsAttribute';
@@ -57,6 +57,8 @@ export type CardProps = {
    * Sets the background color of the Card
    *
    * @default `surface.background.gray.intense`
+   *
+   * @deprecated The `backgroundColor` prop is deprecated and is a no-op. The Card always uses `surface.background.gray.intense`. This prop will be removed in a future major version.
    */
   backgroundColor?: CardSurfaceBackgroundColors;
   /**
@@ -68,12 +70,10 @@ export type CardProps = {
   /**
    * Sets the elevation for Cards
    *
-   * eg: `theme.elevation.midRaised`
-   *
-   * @default `theme.elevation.lowRaised`
-   *
    * **Links:**
    * - Docs: https://blade.razorpay.com/?path=/docs/tokens-elevation--docs
+   *
+   * @deprecated The `elevation` prop is deprecated and is a no-op. The Card always uses a custom elevation. This prop will be removed in a future major version.
    */
   elevation?: keyof Elevation;
   /**
@@ -194,7 +194,8 @@ export type CardProps = {
 const _Card: React.ForwardRefRenderFunction<BladeElementRef, CardProps> = (
   {
     children,
-    backgroundColor = 'surface.background.gray.intense',
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    backgroundColor,
     borderRadius = 'medium',
     elevation = 'lowRaised',
     testID,
@@ -220,6 +221,7 @@ const _Card: React.ForwardRefRenderFunction<BladeElementRef, CardProps> = (
   ref,
 ): React.ReactElement => {
   const [isFocused, setIsFocused] = React.useState(false);
+  const { colorScheme } = useTheme();
 
   useVerifyAllowedChildren({
     children,
@@ -285,7 +287,9 @@ const _Card: React.ForwardRefRenderFunction<BladeElementRef, CardProps> = (
           borderRadius={borderRadius}
           elevation={elevation}
           textAlign={'left' as never}
-          backgroundColor={backgroundColor}
+          backgroundColor="surface.background.gray.intense"
+          colorScheme={colorScheme}
+          isSelected={isSelected}
         >
           {href ? (
             <LinkOverlay
