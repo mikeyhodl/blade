@@ -708,3 +708,40 @@ export const ProductUsecaseChatExperience: StoryFn<typeof ChatInput> = () => {
   );
 };
 ProductUsecaseChatExperience.storyName = 'Product Usecase: Chat Experience';
+
+export const WithFileReupload: StoryFn<typeof ChatInput> = () => {
+  const [files, setFiles] = React.useState<BladeFileList>([
+    {
+      name: 'screenshot.png',
+      size: 76160,
+      status: 'error',
+      errorText: 'Upload failed',
+      id: 'file-1',
+    } as BladeFileList[0],
+  ]);
+
+  return (
+    <Box maxWidth="600px">
+      <ChatInput
+        placeholder="Ask a question..."
+        fileList={files}
+        onFileRemove={({ file }) => setFiles((prev) => prev.filter((f) => f.id !== file.id))}
+        onFileReupload={({ file }) => {
+          console.log('Re-upload clicked for:', file.name);
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === file.id ? { ...f, status: 'uploading', errorText: undefined } : f,
+            ),
+          );
+          // Simulate re-upload completing after 2s
+          setTimeout(() => {
+            setFiles((prev) =>
+              prev.map((f) => (f.id === file.id ? { ...f, status: 'success' } : f)),
+            );
+          }, 2000);
+        }}
+      />
+    </Box>
+  );
+};
+WithFileReupload.storyName = 'With File Reupload';
