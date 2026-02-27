@@ -115,6 +115,7 @@ const ComponentType = {
   BUTTON: 'BUTTON',
   LINK: 'LINK',
   ALERT: 'ALERT',
+  AMOUNT: 'AMOUNT',
 } as const;
 
 /**
@@ -339,6 +340,12 @@ type AlertComponent = GenUIBaseComponent & {
   };
 };
 
+type AmountComponent = GenUIBaseComponent & {
+  component: typeof ComponentType.AMOUNT;
+  value?: number;
+  currency?: string;
+};
+
 /**
  * Union type of all built-in UI components
  */
@@ -355,7 +362,8 @@ type GenUIBuiltInUIComponent =
   | InfoGroupComponent
   | ButtonComponent
   | LinkComponent
-  | AlertComponent;
+  | AlertComponent
+  | AmountComponent;
 
 /**
  * Generic UI component type - can be extended with custom components
@@ -1342,6 +1350,15 @@ const RenderAlertComponent = memo(
   },
 );
 
+const RenderAmountComponent = memo(({ value, currency }: AmountComponent) => {
+  const resolvedCurrency = currency || 'INR';
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  if (typeof numValue !== 'number' || isNaN(numValue)) {
+    return <Text size="medium">-</Text>;
+  }
+  return <Amount value={numValue} currency={resolvedCurrency as 'INR' | 'MYR'} />;
+});
+
 // Alias for internal use in built-in renderers
 const GenUIComponentRenderer = ComponentRenderer;
 type GenUIComponentRenderer = React.ComponentType<GenUIBaseComponent & { index: number }>;
@@ -1388,6 +1405,9 @@ const createBuiltInRegistry = (): GenUIComponentRegistry => ({
   },
   [ComponentType.ALERT]: {
     renderer: RenderAlertComponent as GenUIComponentRenderer,
+  },
+  [ComponentType.AMOUNT]: {
+    renderer: RenderAmountComponent as GenUIComponentRenderer,
   },
 });
 
