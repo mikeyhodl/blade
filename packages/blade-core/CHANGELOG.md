@@ -1,5 +1,15 @@
 # @razorpay/blade-core
 
+## 0.5.0
+
+### Minor Changes
+
+- 7cd21cb8: feat(blade-svelte): add Alert, Avatar, AvatarGroup and Breadcrumb components
+
+### Patch Changes
+
+- 97a47b78: feat(blade-svelte): add Chip component
+
 ## 0.4.1
 
 ### Patch Changes
