@@ -1,5 +1,13 @@
 # @razorpay/blade-svelte
 
+## 0.11.8
+
+### Patch Changes
+
+- fd3e1e2d1: fix(blade-svelte): prevent BottomSheet focus from scrolling host content
+
+  Use `focus({ preventScroll: true })` when moving focus into the sheet on open and when returning focus to the trigger on dismiss. Stops the browser from scrolling scrollable ancestors (e.g. Checkout modals) while preserving keyboard and screen-reader focus behavior.
+
 ## 0.11.7
 
 ### Patch Changes
