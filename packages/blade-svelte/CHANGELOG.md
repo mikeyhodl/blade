@@ -1,5 +1,11 @@
 # @razorpay/blade-svelte
 
+## 0.16.1
+
+### Patch Changes
+
+- a90addbf2: fix(PhoneNumberInput): fire `onChange` on every keystroke instead of only on blur/commit
+
 ## 0.16.0
 
 ### Minor Changes
